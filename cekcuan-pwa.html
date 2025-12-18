@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1e3a5f">
+    <title>CekCuan - Hitung Laba UMKM</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-blue: #1e3a5f;
+            --secondary-green: #28a745;
+            --light-bg: #f8f9fa;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+        
+        .app-header {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #2c5282 100%);
+            color: white;
+            padding: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--secondary-green) 0%, #218838 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background: var(--primary-blue);
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background: #2c5282;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(30, 58, 95, 0.3);
+        }
+        
+        .btn-success {
+            background: var(--secondary-green);
+            border: none;
+            border-radius: 10px;
+        }
+        
+        .btn-danger {
+            border-radius: 10px;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 0.75rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 0.2rem rgba(30, 58, 95, 0.15);
+        }
+        
+        .result-box {
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            border-left: 5px solid var(--secondary-green);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+        }
+        
+        .result-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .result-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-top: 0.5rem;
+        }
+        
+        .result-positive {
+            color: var(--secondary-green);
+        }
+        
+        .result-negative {
+            color: #dc3545;
+        }
+        
+        .history-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 0.75rem;
+            border-left: 4px solid var(--primary-blue);
+            transition: all 0.2s;
+        }
+        
+        .history-item:hover {
+            background: #f8f9fa;
+            transform: translateX(5px);
+        }
+        
+        .install-prompt {
+            background: linear-gradient(135deg, var(--secondary-green) 0%, #218838 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .result-value {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="app-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="mb-0 fs-3">💰 CekCuan</h1>
+                    <p class="mb-0 small opacity-75">Hitung Laba & Balik Modal UMKM</p>
+                </div>
+                <button class="btn btn-light btn-sm" id="installBtn" style="display:none;">
+                    📱 Install App
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Install Prompt -->
+    <div class="container mt-3">
+        <div class="install-prompt" id="installPrompt">
+            <div class="d-flex justify-content-between align-items-center">
+                <span>📲 Install CekCuan untuk akses lebih cepat!</span>
+                <button class="btn btn-light btn-sm" onclick="document.getElementById('installPrompt').style.display='none'">✕</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mt-4 pb-5">
+        <div class="row">
+            <!-- Form Input -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        📊 Input Data Usaha
+                    </div>
+                    <div class="card-body">
+                        <form id="calcForm">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Biaya Bahan Baku per Unit</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">Rp</span>
+                                    <input type="number" class="form-control" id="biayaBahan" placeholder="10000" required>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Harga Jual per Unit</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">Rp</span>
+                                    <input type="number" class="form-control" id="hargaJual" placeholder="15000" required>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Jumlah Barang yang Dijual</label>
+                                <input type="number" class="form-control" id="jumlahBarang" placeholder="100" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Total Modal Awal</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">Rp</span>
+                                    <input type="number" class="form-control" id="totalModal" placeholder="1000000" required>
+                                </div>
+                                <div class="form-text">Modal awal termasuk semua biaya operasional</div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100 mt-3">
+                                🔍 Hitung Sekarang
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hasil Perhitungan -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        📈 Hasil Perhitungan
+                    </div>
+                    <div class="card-body" id="resultSection" style="display:none;">
+                        <div class="result-box">
+                            <div class="result-label">Total Pendapatan</div>
+                            <div class="result-value" id="totalPendapatan">Rp 0</div>
+                        </div>
+                        
+                        <div class="result-box">
+                            <div class="result-label">Total Biaya Bahan</div>
+                            <div class="result-value" id="totalBiaya">Rp 0</div>
+                        </div>
+                        
+                        <div class="result-box">
+                            <div class="result-label">Laba Kotor</div>
+                            <div class="result-value" id="labaKotor">Rp 0</div>
+                        </div>
+                        
+                        <div class="result-box">
+                            <div class="result-label">Laba Bersih (setelah modal)</div>
+                            <div class="result-value" id="labaBersih">Rp 0</div>
+                        </div>
+                        
+                        <div class="result-box">
+                            <div class="result-label">Status Balik Modal</div>
+                            <div class="result-value" id="statusBM">-</div>
+                            <div class="mt-2" id="infoTambahan"></div>
+                        </div>
+                        
+                        <button class="btn btn-success w-100 mt-3" id="saveBtn">
+                            💾 Simpan Hasil
+                        </button>
+                    </div>
+                    <div class="card-body text-center text-muted" id="emptyState">
+                        <p class="mb-0">Silakan isi form untuk melihat hasil perhitungan</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Riwayat Perhitungan -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>📋 Riwayat Perhitungan</span>
+                        <button class="btn btn-danger btn-sm" id="clearHistory">🗑️ Hapus Semua</button>
+                    </div>
+                    <div class="card-body" id="historySection">
+                        <p class="text-muted text-center">Belum ada riwayat perhitungan</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Format Rupiah
+        function formatRupiah(angka) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(angka);
+        }
+
+        // Load History
+        function loadHistory() {
+            const history = JSON.parse(localStorage.getItem('cekcuanHistory') || '[]');
+            const historySection = document.getElementById('historySection');
+            
+            if (history.length === 0) {
+                historySection.innerHTML = '<p class="text-muted text-center mb-0">Belum ada riwayat perhitungan</p>';
+                return;
+            }
+            
+            historySection.innerHTML = history.map((item, index) => `
+                <div class="history-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="fw-bold text-primary mb-1">Perhitungan #${history.length - index}</div>
+                            <div class="small text-muted mb-2">${item.tanggal}</div>
+                            <div class="row g-2 small">
+                                <div class="col-6">📦 ${item.jumlahBarang} unit @ ${formatRupiah(item.hargaJual)}</div>
+                                <div class="col-6">💰 Modal: ${formatRupiah(item.totalModal)}</div>
+                                <div class="col-6">📊 Laba Kotor: ${formatRupiah(item.labaKotor)}</div>
+                                <div class="col-6 fw-bold ${item.labaBersih >= 0 ? 'text-success' : 'text-danger'}">
+                                    💵 Laba Bersih: ${formatRupiah(item.labaBersih)}
+                                </div>
+                            </div>
+                            <div class="mt-2 badge ${item.balikModal ? 'bg-success' : 'bg-warning text-dark'}">
+                                ${item.statusBM}
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger ms-2" onclick="deleteHistory(${index})">✕</button>
+                    </div>
+                </div>
+            `).reverse().join('');
+        }
+
+        // Delete History Item
+        function deleteHistory(index) {
+            const history = JSON.parse(localStorage.getItem('cekcuanHistory') || '[]');
+            history.splice(index, 1);
+            localStorage.setItem('cekcuanHistory', JSON.stringify(history));
+            loadHistory();
+        }
+
+        // Form Submit
+        document.getElementById('calcForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const biayaBahan = parseFloat(document.getElementById('biayaBahan').value);
+            const hargaJual = parseFloat(document.getElementById('hargaJual').value);
+            const jumlahBarang = parseFloat(document.getElementById('jumlahBarang').value);
+            const totalModal = parseFloat(document.getElementById('totalModal').value);
+            
+            // Perhitungan
+            const totalPendapatan = hargaJual * jumlahBarang;
+            const totalBiaya = biayaBahan * jumlahBarang;
+            const labaKotor = totalPendapatan - totalBiaya;
+            const labaBersih = labaKotor - totalModal;
+            const balikModal = labaBersih >= 0;
+            
+            // Tampilkan hasil
+            document.getElementById('resultSection').style.display = 'block';
+            document.getElementById('emptyState').style.display = 'none';
+            
+            document.getElementById('totalPendapatan').textContent = formatRupiah(totalPendapatan);
+            document.getElementById('totalBiaya').textContent = formatRupiah(totalBiaya);
+            document.getElementById('labaKotor').textContent = formatRupiah(labaKotor);
+            
+            const labaBersihEl = document.getElementById('labaBersih');
+            labaBersihEl.textContent = formatRupiah(labaBersih);
+            labaBersihEl.className = 'result-value ' + (labaBersih >= 0 ? 'result-positive' : 'result-negative');
+            
+            const statusBMEl = document.getElementById('statusBM');
+            let statusText = '';
+            let infoText = '';
+            
+            if (balikModal) {
+                statusText = '✅ SUDAH BALIK MODAL';
+                statusBMEl.className = 'result-value result-positive';
+                const persenKeuntungan = ((labaBersih / totalModal) * 100).toFixed(1);
+                infoText = `<div class="alert alert-success">Selamat! Anda sudah balik modal dengan keuntungan <strong>${persenKeuntungan}%</strong></div>`;
+            } else {
+                statusText = '⚠️ BELUM BALIK MODAL';
+                statusBMEl.className = 'result-value result-negative';
+                const kekurangan = Math.abs(labaBersih);
+                const unitTambahan = Math.ceil(kekurangan / (hargaJual - biayaBahan));
+                infoText = `<div class="alert alert-warning">Anda perlu menjual <strong>${unitTambahan} unit lagi</strong> untuk mencapai balik modal (kurang ${formatRupiah(kekurangan)})</div>`;
+            }
+            
+            statusBMEl.textContent = statusText;
+            document.getElementById('infoTambahan').innerHTML = infoText;
+            
+            // Simpan data untuk save
+            window.currentCalculation = {
+                biayaBahan, hargaJual, jumlahBarang, totalModal,
+                totalPendapatan, totalBiaya, labaKotor, labaBersih, balikModal,
+                statusBM: statusText,
+                tanggal: new Date().toLocaleString('id-ID')
+            };
+            
+            // Scroll ke hasil
+            document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+
+        // Save to History
+        document.getElementById('saveBtn').addEventListener('click', function() {
+            if (!window.currentCalculation) return;
+            
+            const history = JSON.parse(localStorage.getItem('cekcuanHistory') || '[]');
+            history.push(window.currentCalculation);
+            localStorage.setItem('cekcuanHistory', JSON.stringify(history));
+            
+            loadHistory();
+            
+            // Notifikasi
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✅ Berhasil Disimpan!';
+            btn.disabled = true;
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 2000);
+        });
+
+        // Clear History
+        document.getElementById('clearHistory').addEventListener('click', function() {
+            if (confirm('Yakin ingin menghapus semua riwayat?')) {
+                localStorage.removeItem('cekcuanHistory');
+                loadHistory();
+            }
+        });
+
+        // PWA Install
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installBtn').style.display = 'block';
+            document.getElementById('installPrompt').style.display = 'block';
+        });
+
+        document.getElementById('installBtn').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                document.getElementById('installBtn').style.display = 'none';
+                document.getElementById('installPrompt').style.display = 'none';
+            }
+        });
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const swCode = `
+                    const CACHE_NAME = 'cekcuan-v1';
+                    const urlsToCache = ['/'];
+                    
+                    self.addEventListener('install', event => {
+                        event.waitUntil(
+                            caches.open(CACHE_NAME)
+                                .then(cache => cache.addAll(urlsToCache))
+                        );
+                    });
+                    
+                    self.addEventListener('fetch', event => {
+                        event.respondWith(
+                            caches.match(event.request)
+                                .then(response => response || fetch(event.request))
+                        );
+                    });
+                `;
+                
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                
+                navigator.serviceWorker.register(swUrl);
+            });
+        }
+
+        // Manifest JSON
+        const manifest = {
+            name: 'CekCuan - Hitung Laba UMKM',
+            short_name: 'CekCuan',
+            description: 'Aplikasi untuk menghitung laba rugi dan balik modal UMKM',
+            start_url: '/',
+            display: 'standalone',
+            background_color: '#ffffff',
+            theme_color: '#1e3a5f',
+            icons: [
+                {
+                    src: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%231e3a5f" width="100" height="100"/><text y="70" font-size="70" text-anchor="middle" x="50">💰</text></svg>',
+                    sizes: '192x192',
+                    type: 'image/svg+xml'
+                }
+            ]
+        };
+        
+        const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        document.querySelector('link[rel="manifest"]') || 
+            document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${manifestURL}">`);
+
+        // Load history on page load
+        loadHistory();
+    </script>
+</body>
+</html>
